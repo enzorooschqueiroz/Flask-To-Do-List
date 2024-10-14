@@ -24,6 +24,13 @@ class AssignmentModel(db.Document):
     assignment_status = db.StringField(required=True, max_length=10)
     assignment_due_date = db.DateTimeField(required=True)
 
+class UserModel(db.Document):
+    user_id = db.IntegerField(required=True, unique=True)
+    user_name = db.StringField(required=True, unique=False)
+    user_email = db.EmailField(required=True, unique=True)
+    user_password = db.StringField(required=True, unique=False)
+    
+
 
 class Assignments(Resource):
     def get(self):
