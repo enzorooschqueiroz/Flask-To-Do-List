@@ -1,8 +1,28 @@
 from flask import Flask
 from flask_restful import Resource, Api
+from flask_mongoengine import MongoEngine
+
 
 app = Flask(__name__)
 api = Api(app)
+db = MongoEngine(app)
+
+
+app.config['MONGODB_SETTING'] = {
+    "db": "assignments",
+    "host": "mongodb",
+    "port": 27017,
+    "user": "admin",
+    "password": "admin"  # Inserir credenciais do MongoDB aqui
+}
+
+
+class AssignmentModel(db.Document):
+    assignment_id = db.IntegerField(required=True, unique=True)
+    assignment_title = db.StringField(required=True, unique=False)
+    assignment_description = db.StringField(required=True, unique=False)
+    assignment_status = db.StringField(required=True, max_length=10)
+    assignment_due_date = db.DateTimeField(required=True)
 
 
 class Assignments(Resource):
