@@ -1,6 +1,10 @@
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 class Config:
     MONGODB_SETTINGS = {
-        'db': 'assignments',
-        'host': 'mongodb://admin:admin@localhost:27017/assignments'
+        'host': os.getenv('MONGODB_KEY')
     }
-    JWT_SECRET_KEY = 'sua_chave_secreta'
+    JWT_SECRET_KEY = ''
