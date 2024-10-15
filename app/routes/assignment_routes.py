@@ -76,3 +76,32 @@ def delete_assignment(assignment_id):
 
     return {'message': 'Assignment deleted successfully'}, 200
 
+
+@assignment_bp.route('/assignment/<assignment_id>', methods=['PUT'])
+@jwt_required()
+def update_assignment(assignment_id):
+    current_user_email = get_jwt_identity()  # Obtendo o usuário autenticado
+    user = UserModel.objects(user_email=current_user_email).first()
+
+    if not user:
+        return {'message': 'User not found'}, 404
+
+    assignment = AssignmentModel.objects(assignment_id=assignment_id, user_id=user).first()
+
+    if not assignment:
+        return {'message': 'Assignment not found'}, 404
+
+    data = request.get_json()
+
+    if 'assignment_title' in data:
+        assignment.assignment_title = data['assignment_title']
+    if 'assignment_description' in data:
+        assignment.assignment_description = data['assignment_description']
+    if 'assignment_status' in data:
+        assignment.assignment_status = data['assignment_status']
+    if 'assignment_due_date' in data:
+        assignment.assignment_due_date = datetime.strptime(data['assignment_due_date'], '%Y-%m-%d')
+
+    assignment.save()
+
+    return {'message': 'Assignment updated successfully'}, 200
