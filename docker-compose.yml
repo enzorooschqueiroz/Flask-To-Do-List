@@ -6,8 +6,5 @@ services:
       context: . 
     ports:
       - "5000:5000"
-    environment:
-      - MONGO_DB=mongodb+srv://admin:D8RGu86zP8NgSdS@todo.av9qg.mongodb.net/assignments?retryWrites=true&w=majority&appName=TODO
-      - JWT_TOKEN=6d3d4919c14eeb20a52e673cc4899b7f7cd974297ff6dbcdcfe3cc36fa105452
     volumes:
       - .:/app
