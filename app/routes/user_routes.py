@@ -2,14 +2,16 @@ from flask import Blueprint, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models.user_model import UserModel
+import redis
+import json
 
 user_bp = Blueprint('users', __name__)
+redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 
 @user_bp.route('/register', methods=['POST'])
 def register_user():
     data = request.get_json()
 
-    # Verifica se o email já está em uso
     if UserModel.objects(user_email=data['user_email']).first():
         return {'message': 'User already exists'}, 400
 
@@ -23,6 +25,8 @@ def register_user():
     
     new_user.save()
 
+    redis_client.set(f"user:{new_user.user_email}", json.dumps(new_user.to_mongo().to_dict()))
+
     return {'message': 'User created successfully'}, 201
 
 
@@ -34,28 +38,35 @@ def login_user():
     if not user or not check_password_hash(user.user_password, data['user_password']):
         return {'message': 'Invalid credentials'}, 401
 
-    # Gerando o JWT token
     access_token = create_access_token(identity=user.user_email)
 
-    
     return {'access_token': access_token}, 200
+
 
 @user_bp.route('/user', methods=['GET'])
 @jwt_required()
 def get_current_user():
     user_email = get_jwt_identity()
-    user = UserModel.objects(user_email=user_email).first()
+    
+    user_data = redis_client.get(f"user:{user_email}")
 
-    if not user:
-        return {'message': 'User not found'}, 404
+    if user_data:
+        user_data = json.loads(user_data)
+    else:
+        user = UserModel.objects(user_email=user_email).first()
+        if not user:
+            return {'message': 'User not found'}, 404
 
-    user_data = {
-        'user_id': user.user_id,
-        'user_name': user.user_name,
-        'user_email': user.user_email
-    }
+        user_data = {
+            'user_id': user.user_id,
+            'user_name': user.user_name,
+            'user_email': user.user_email
+        }
+
+        redis_client.set(f"user:{user_email}", json.dumps(user_data))
 
     return {'user': user_data}, 200
+
 
 @user_bp.route('/user', methods=['PUT'])
 @jwt_required()
@@ -76,7 +87,10 @@ def update_user():
     
     user.save()
 
+    redis_client.set(f"user:{user_email}", json.dumps(user.to_mongo().to_dict()))
+
     return {'message': 'User updated successfully'}, 200
+
 
 @user_bp.route('/user', methods=['DELETE'])
 @jwt_required()
@@ -88,5 +102,7 @@ def delete_user():
         return {'message': 'User not found'}, 404
 
     user.delete()
+
+    redis_client.delete(f"user:{user_email}")
 
     return {'message': 'User deleted successfully'}, 200
