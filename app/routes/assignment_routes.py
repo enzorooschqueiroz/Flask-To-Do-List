@@ -52,3 +52,27 @@ def get_assignments():
     } for a in assignments]
 
     return {'assignments': assignments_list}, 200
+
+
+@assignment_bp.route('/assignment/<assignment_id>', methods=['DELETE'])
+@jwt_required()
+def delete_assignment(assignment_id):
+    current_user_email = get_jwt_identity()  # Obtendo o usuário autenticado
+    user = UserModel.objects(user_email=current_user_email).first()
+
+    if not user:
+        return {'message': 'User not found'}, 404
+
+    assignment = AssignmentModel.objects(assignment_id=assignment_id, user_id=user).first()
+
+    if not assignment:
+        return {'message': 'Assignment not found'}, 404
+
+    assignment.delete()
+
+    # Remover a tarefa da lista de tarefas do usuário
+    user.user_assignments = [a for a in user.user_assignments if a.assignment_id != assignment.assignment_id]
+    user.save()
+
+    return {'message': 'Assignment deleted successfully'}, 200
+
