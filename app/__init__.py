@@ -5,13 +5,17 @@ import redis
 from .routes.assignment_routes import assignment_bp
 from .routes.user_routes import user_bp
 from .config import Config
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 db = MongoEngine()
 
 redis_client = redis.StrictRedis(
-    host= config.get('REDIS_HOST'),
-    port= config.get('REDIS_PORT'),
-    db = 0
+    host= os.getenv('REDIS_HOST'),
+    port=os.getenv('REDIS_PORT'),
+    db=0
 )
 
 def create_app():
