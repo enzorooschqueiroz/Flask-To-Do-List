@@ -10,3 +10,6 @@ class Config:
         'host': os.getenv('MONGO_DB')
     }
     JWT_SECRET_KEY = os.getenv('JWT_TOKEN')
+
+    REDIS_HOST = os.getenv('REDIS_HOST')
+    REDIS_PORT = os.getenv('REDIS_PORT')

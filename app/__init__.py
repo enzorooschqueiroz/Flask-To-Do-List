@@ -8,19 +8,23 @@ from .config import Config
 
 db = MongoEngine()
 
+redis_client = redis.StrictRedis(
+    host= config.get('REDIS_HOST'),
+    port= config.get('REDIS_PORT'),
+    db = 0
+)
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Inicializando MongoDB e Redis
     db.init_app(app)
-    redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
     
-    # Configurando JWT
     jwt = JWTManager(app)
 
-    # Registrando Blueprints
     app.register_blueprint(assignment_bp)
     app.register_blueprint(user_bp)
+
+    app.redis_client = redis_client
 
     return app
