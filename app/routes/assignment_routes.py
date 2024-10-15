@@ -30,3 +30,25 @@ def create_assignment():
     user.save()
 
     return {'message': 'Assignment created'}, 201
+
+
+@assignment_bp.route('/assignments', methods=['GET'])
+@jwt_required()
+def get_assignments():
+    current_user_email = get_jwt_identity()  
+    user = UserModel.objects(user_email=current_user_email).first()
+
+    if not user:
+        return {'message': 'User not found'}, 404
+
+    # Obtendo todas as tarefas associadas ao usuário autenticado
+    assignments = AssignmentModel.objects(user_id=user)
+    assignments_list = [{
+        'assignment_id': str(a.assignment_id),
+        'assignment_title': a.assignment_title,
+        'assignment_description': a.assignment_description,
+        'assignment_status': a.assignment_status,
+        'assignment_due_date': a.assignment_due_date.strftime('%Y-%m-%d')
+    } for a in assignments]
+
+    return {'assignments': assignments_list}, 200
