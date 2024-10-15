@@ -16,7 +16,6 @@ def register_user():
     hashed_password = generate_password_hash(data['user_password'], method='sha256')
 
     new_user = UserModel(
-        user_id=data['user_id'],
         user_name=data['user_name'],
         user_email=data['user_email'],
         user_password=hashed_password
