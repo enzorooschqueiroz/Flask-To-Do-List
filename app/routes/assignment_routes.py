@@ -105,3 +105,28 @@ def update_assignment(assignment_id):
     assignment.save()
 
     return {'message': 'Assignment updated successfully'}, 200
+
+
+@assignment_bp.route('/assignment/<assignment_id>', methods=['GET'])
+@jwt_required()
+def get_assignment_by_id(assignment_id):
+    current_user_email = get_jwt_identity()  # Obtendo o usuário autenticado
+    user = UserModel.objects(user_email=current_user_email).first()
+
+    if not user:
+        return {'message': 'User not found'}, 404
+
+    assignment = AssignmentModel.objects(assignment_id=assignment_id, user_id=user).first()
+
+    if not assignment:
+        return {'message': 'Assignment not found'}, 404
+
+    assignment_data = {
+        'assignment_id': str(assignment.assignment_id),
+        'assignment_title': assignment.assignment_title,
+        'assignment_description': assignment.assignment_description,
+        'assignment_status': assignment.assignment_status,
+        'assignment_due_date': assignment.assignment_due_date.strftime('%Y-%m-%d')
+    }
+
+    return {'assignment': assignment_data}, 200
