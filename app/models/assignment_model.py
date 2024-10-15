@@ -1,8 +1,9 @@
 from mongoengine import Document, StringField, IntField, DateTimeField, ReferenceField
 from .user_model import UserModel
+import uuid
 
 class AssignmentModel(Document):
-    assignment_id = IntField(required=True, unique=True)
+    assignment_id = StringField(required=True, default=lambda: str(uuid.uuid4()), unique=True)
     assignment_title = StringField(required=True)
     assignment_description = StringField(required=True)
     assignment_status = StringField(required=True, max_length=10)

@@ -17,17 +17,15 @@ def create_assignment():
 
     data = request.get_json()
     new_assignment = AssignmentModel(
-        assignment_id=data['assignment_id'],
         assignment_title=data['assignment_title'],
         assignment_description=data['assignment_description'],
         assignment_status=data['assignment_status'],
         assignment_due_date=datetime.strptime(data['assignment_due_date'], '%Y-%m-%d'),
-        user_id=user  # Associando a tarefa ao usuário
+        user_id=user  
     )
     
     new_assignment.save()
 
-    # Atualizando a lista de tarefas do usuário
     user.user_assignments.append(new_assignment)
     user.save()
 
