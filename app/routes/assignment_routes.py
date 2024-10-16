@@ -4,6 +4,7 @@ from app.models.assignment_model import AssignmentModel
 from app.models.user_model import UserModel
 from datetime import datetime
 import redis
+import json
 from bson import ObjectId
 
 
@@ -62,7 +63,8 @@ def get_assignments():
     for assignment in AssignmentModel.objects(user_id=user):
         cached_assignment = current_app.redis_client.get(str(assignment.assignment_id))
         if cached_assignment:
-            assignments_list.append(cached_assignment)  
+            # Assuming cached_assignment is a JSON string, you can decode it
+            assignments_list.append(json.loads(cached_assignment))  
         else:
             assignment_data = {
                 'assignment_id': str(assignment.assignment_id),
@@ -73,9 +75,10 @@ def get_assignments():
             }
             assignments_list.append(assignment_data)
             
-            current_app.redis_client.set(str(assignment.assignment_id), assignment_data)
+            current_app.redis_client.set(str(assignment.assignment_id), json.dumps(assignment_data))  # Save as JSON
 
     return {'assignments': assignments_list}, 200
+
 
 
 @assignment_bp.route('/assignment/<assignment_id>', methods=['DELETE'])
