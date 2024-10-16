@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_mongoengine import MongoEngine
 from flask_jwt_extended import JWTManager
-import redis
 from .routes.assignment_routes import assignment_bp
 from .routes.user_routes import user_bp
 from .config import Config
