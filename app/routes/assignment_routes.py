@@ -3,8 +3,22 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.assignment_model import AssignmentModel
 from app.models.user_model import UserModel
 from datetime import datetime
+import redis
+from bson import ObjectId
+
 
 assignment_bp = Blueprint('assignments', __name__)
+
+redis_client = redis.StrictRedis(host='redis', port=6379, db=0, decode_responses=True)
+
+def serialize_object_id(data):
+    if isinstance(data, dict):
+        return {key: serialize_object_id(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [serialize_object_id(item) for item in data]
+    elif isinstance(data, ObjectId):
+        return str(data)
+    return data
 
 @assignment_bp.route('/assignment', methods=['POST'])
 @jwt_required()
@@ -26,8 +40,8 @@ def create_assignment():
     
     new_assignment.save()
 
-    user.user_assignments.append(new_assignment)
-    user.save()
+    assignment_data = new_assignment.to_mongo().to_dict()
+    assignment_data = serialize_object_id(assignment_data)
 
 
     current_app.redis_client.set(str(new_assignment.assignment_id), new_assignment.to_json())

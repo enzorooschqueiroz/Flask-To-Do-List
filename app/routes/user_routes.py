@@ -4,9 +4,20 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from app.models.user_model import UserModel
 import redis
 import json
+from bson import ObjectId
 
 user_bp = Blueprint('users', __name__)
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+redis_client = redis.StrictRedis(host='redis', port=6379, db=0, decode_responses=True)
+
+
+def serialize_object_id(data):
+    if isinstance(data, dict):
+        return {key: serialize_object_id(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [serialize_object_id(item) for item in data]
+    elif isinstance(data, ObjectId):
+        return str(data)
+    return data
 
 @user_bp.route('/register', methods=['POST'])
 def register_user():
@@ -25,7 +36,10 @@ def register_user():
     
     new_user.save()
 
-    redis_client.set(f"user:{new_user.user_email}", json.dumps(new_user.to_mongo().to_dict()))
+    user_data = new_user.to_mongo().to_dict()
+    user_data = serialize_object_id(user_data)  # Converte ObjectId para string
+
+    redis_client.set(f"user:{new_user.user_email}", json.dumps(user_data))
 
     return {'message': 'User created successfully'}, 201
 
@@ -63,6 +77,8 @@ def get_current_user():
             'user_email': user.user_email
         }
 
+        # Serialize user data
+        user_data = serialize_object_id(user_data)
         redis_client.set(f"user:{user_email}", json.dumps(user_data))
 
     return {'user': user_data}, 200
@@ -87,7 +103,8 @@ def update_user():
     
     user.save()
 
-    redis_client.set(f"user:{user_email}", json.dumps(user.to_mongo().to_dict()))
+    user_data = serialize_object_id(user.to_mongo().to_dict())
+    redis_client.set(f"user:{user_email}", json.dumps(user_data))
 
     return {'message': 'User updated successfully'}, 200
 
@@ -102,7 +119,6 @@ def delete_user():
         return {'message': 'User not found'}, 404
 
     user.delete()
-
     redis_client.delete(f"user:{user_email}")
 
     return {'message': 'User deleted successfully'}, 200
