@@ -45,7 +45,8 @@ def create_assignment():
     assignment_data = serialize_object_id(assignment_data)
 
 
-    current_app.redis_client.set(str(new_assignment.assignment_id), new_assignment.to_json())
+    redis_client.set(str(new_assignment.assignment_id), new_assignment.to_json())
+
 
     return {'message': 'Assignment created'}, 201
 
@@ -75,7 +76,7 @@ def get_assignments():
             }
             assignments_list.append(assignment_data)
             
-            current_app.redis_client.set(str(assignment.assignment_id), json.dumps(assignment_data))  # Save as JSON
+            redis_client.set(str(assignment.assignment_id), json.dumps(assignment_data))  # Save as JSON
 
     return {'assignments': assignments_list}, 200
 
@@ -100,7 +101,7 @@ def delete_assignment(assignment_id):
     user.user_assignments = [a for a in user.user_assignments if a.assignment_id != assignment.assignment_id]
     user.save()
 
-    current_app.redis_client.delete(str(assignment_id))
+    redis_client.delete(str(assignment_id))
 
     return {'message': 'Assignment deleted successfully'}, 200
 
@@ -132,7 +133,7 @@ def update_assignment(assignment_id):
 
     assignment.save()
 
-    current_app.redis_client.set(str(assignment_id), assignment.to_json())
+    redis_client.set(str(assignment_id), assignment.to_json())
 
     return {'message': 'Assignment updated successfully'}, 200
 
@@ -162,7 +163,7 @@ def get_assignment_by_id(assignment_id):
         'assignment_status': assignment.assignment_status,
         'assignment_due_date': assignment.assignment_due_date.strftime('%Y-%m-%d')
     }
-
-    current_app.redis_client.set(str(assignment_id), assignment_data)
+    
+    redis_client.set(str(assignment_id), assignment_data)
 
     return {'assignment': assignment_data}, 200
