@@ -13,11 +13,7 @@ load_dotenv()
 
 db = MongoEngine()
 
-redis_client = redis.StrictRedis(
-    host= os.getenv('REDIS_HOST'),
-    port=os.getenv('REDIS_PORT'),
-    db=0
-)
+
 
 def create_app():
     app = Flask(__name__)
@@ -31,7 +27,5 @@ def create_app():
 
     app.register_blueprint(assignment_bp)
     app.register_blueprint(user_bp)
-
-    app.redis_client = redis_client
 
     return app

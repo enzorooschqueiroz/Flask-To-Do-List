@@ -1,16 +1,11 @@
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.assignment_model import AssignmentModel
 from app.models.user_model import UserModel
 from datetime import datetime
-import redis
-import json
 from bson import ObjectId
 
-
 assignment_bp = Blueprint('assignments', __name__)
-
-redis_client = redis.StrictRedis(host='redis', port=6379, db=0, decode_responses=True)
 
 def serialize_object_id(data):
     if isinstance(data, dict):
@@ -24,7 +19,7 @@ def serialize_object_id(data):
 @assignment_bp.route('/assignment', methods=['POST'])
 @jwt_required()
 def create_assignment():
-    current_user_email = get_jwt_identity()  
+    current_user_email = get_jwt_identity()
     user = UserModel.objects(user_email=current_user_email).first()
 
     if not user:
@@ -44,17 +39,13 @@ def create_assignment():
     assignment_data = new_assignment.to_mongo().to_dict()
     assignment_data = serialize_object_id(assignment_data)
 
-
-    redis_client.set(str(new_assignment.assignment_id), new_assignment.to_json())
-
-
-    return {'message': 'Assignment created'}, 201
+    return {'message': 'Assignment created', 'assignment': assignment_data}, 201
 
 
 @assignment_bp.route('/assignments', methods=['GET'])
 @jwt_required()
 def get_assignments():
-    current_user_email = get_jwt_identity()  
+    current_user_email = get_jwt_identity()
     user = UserModel.objects(user_email=current_user_email).first()
 
     if not user:
@@ -62,30 +53,22 @@ def get_assignments():
 
     assignments_list = []
     for assignment in AssignmentModel.objects(user_id=user):
-        cached_assignment = current_app.redis_client.get(str(assignment.assignment_id))
-        if cached_assignment:
-            # Assuming cached_assignment is a JSON string, you can decode it
-            assignments_list.append(json.loads(cached_assignment))  
-        else:
-            assignment_data = {
-                'assignment_id': str(assignment.assignment_id),
-                'assignment_title': assignment.assignment_title,
-                'assignment_description': assignment.assignment_description,
-                'assignment_status': assignment.assignment_status,
-                'assignment_due_date': assignment.assignment_due_date.strftime('%Y-%m-%d')
-            }
-            assignments_list.append(assignment_data)
-            
-            redis_client.set(str(assignment.assignment_id), json.dumps(assignment_data))  # Save as JSON
+        assignment_data = {
+            'assignment_id': str(assignment.assignment_id),
+            'assignment_title': assignment.assignment_title,
+            'assignment_description': assignment.assignment_description,
+            'assignment_status': assignment.assignment_status,
+            'assignment_due_date': assignment.assignment_due_date.strftime('%Y-%m-%d')
+        }
+        assignments_list.append(assignment_data)
 
     return {'assignments': assignments_list}, 200
-
 
 
 @assignment_bp.route('/assignment/<assignment_id>', methods=['DELETE'])
 @jwt_required()
 def delete_assignment(assignment_id):
-    current_user_email = get_jwt_identity() 
+    current_user_email = get_jwt_identity()
     user = UserModel.objects(user_email=current_user_email).first()
 
     if not user:
@@ -101,15 +84,13 @@ def delete_assignment(assignment_id):
     user.user_assignments = [a for a in user.user_assignments if a.assignment_id != assignment.assignment_id]
     user.save()
 
-    redis_client.delete(str(assignment_id))
-
     return {'message': 'Assignment deleted successfully'}, 200
 
 
 @assignment_bp.route('/assignment/<assignment_id>', methods=['PUT'])
 @jwt_required()
 def update_assignment(assignment_id):
-    current_user_email = get_jwt_identity()  # Obtendo o usuário autenticado
+    current_user_email = get_jwt_identity()
     user = UserModel.objects(user_email=current_user_email).first()
 
     if not user:
@@ -133,23 +114,17 @@ def update_assignment(assignment_id):
 
     assignment.save()
 
-    redis_client.set(str(assignment_id), assignment.to_json())
-
     return {'message': 'Assignment updated successfully'}, 200
 
 
 @assignment_bp.route('/assignment/<assignment_id>', methods=['GET'])
 @jwt_required()
 def get_assignment_by_id(assignment_id):
-    current_user_email = get_jwt_identity()  # Obtendo o usuário autenticado
+    current_user_email = get_jwt_identity()
     user = UserModel.objects(user_email=current_user_email).first()
 
     if not user:
         return {'message': 'User not found'}, 404
-
-    cached_assignment = current_app.redis_client.get(str(assignment_id))
-    if cached_assignment:
-        return {'assignment': cached_assignment}, 200  
 
     assignment = AssignmentModel.objects(assignment_id=assignment_id, user_id=user).first()
 
@@ -163,7 +138,5 @@ def get_assignment_by_id(assignment_id):
         'assignment_status': assignment.assignment_status,
         'assignment_due_date': assignment.assignment_due_date.strftime('%Y-%m-%d')
     }
-    
-    redis_client.set(str(assignment_id), assignment_data)
 
     return {'assignment': assignment_data}, 200
