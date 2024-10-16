@@ -23,14 +23,14 @@ jobs:
       uses: docker/login-action@v2
       with:
         registry: https://index.docker.io/v1/
-        username: ${{ secrets.AzureAppService_ContainerUsername_364dd91705214fb7b803b993b1ee5d38 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_d392deca377e4c56828b3b97edff777a }}
+        username: ${{ secrets.AzureAppService_ContainerUsername_c3e1b291e9034258adc5044d8908b3b5 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_464a8f1147d34d90a33342c0f9260b63 }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_364dd91705214fb7b803b993b1ee5d38 }}/enzorooschqueiroz/full-stack-to-do-list-api:${{ github.sha }}
+        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_c3e1b291e9034258adc5044d8908b3b5 }}/enzoroosch/full-stack-to-do-list-api:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +47,5 @@ jobs:
       with:
         app-name: 'prjtodolist'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_b32ec23a408b44f3b53159fbc03d207d }}
-        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_364dd91705214fb7b803b993b1ee5d38 }}/enzorooschqueiroz/full-stack-to-do-list-api:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_224c9af064fa4b48abe01f62678d50b0 }}
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_c3e1b291e9034258adc5044d8908b3b5 }}/enzoroosch/full-stack-to-do-list-api:${{ github.sha }}'
