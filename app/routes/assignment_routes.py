@@ -7,6 +7,7 @@ from bson import ObjectId
 
 assignment_bp = Blueprint('assignments', __name__)
 
+
 def serialize_object_id(data):
     if isinstance(data, dict):
         return {key: serialize_object_id(value) for key, value in data.items()}
@@ -15,6 +16,7 @@ def serialize_object_id(data):
     elif isinstance(data, ObjectId):
         return str(data)
     return data
+
 
 @assignment_bp.route('/assignment', methods=['POST'])
 @jwt_required()
@@ -31,9 +33,9 @@ def create_assignment():
         assignment_description=data['assignment_description'],
         assignment_status=data['assignment_status'],
         assignment_due_date=datetime.strptime(data['assignment_due_date'], '%Y-%m-%d'),
-        user_id=user  
+        user_id=user
     )
-    
+
     new_assignment.save()
 
     assignment_data = new_assignment.to_mongo().to_dict()

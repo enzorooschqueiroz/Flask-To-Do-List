@@ -5,13 +5,9 @@ from .routes.assignment_routes import assignment_bp
 from .routes.user_routes import user_bp
 from .config import Config
 from flask_cors import CORS
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
 
 db = MongoEngine()
-
 
 
 def create_app():
@@ -19,9 +15,9 @@ def create_app():
     app.config.from_object(Config)
 
     CORS(app)
-    
+
     db.init_app(app)
-    
+
     jwt = JWTManager(app)
 
     app.register_blueprint(assignment_bp)

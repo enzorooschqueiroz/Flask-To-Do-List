@@ -6,6 +6,7 @@ from bson import ObjectId
 
 user_bp = Blueprint('users', __name__)
 
+
 def serialize_object_id(data):
     if isinstance(data, dict):
         return {key: serialize_object_id(value) for key, value in data.items()}
@@ -14,6 +15,7 @@ def serialize_object_id(data):
     elif isinstance(data, ObjectId):
         return str(data)
     return data
+
 
 @user_bp.route('/register', methods=['POST'])
 def register_user():
@@ -29,7 +31,7 @@ def register_user():
         user_email=data['user_email'],
         user_password=hashed_password
     )
-    
+
     new_user.save()
 
     user_data = new_user.to_mongo().to_dict()
@@ -84,10 +86,10 @@ def update_user():
 
     if 'user_name' in data:
         user.user_name = data['user_name']
-    
+
     if 'user_password' in data:
         user.user_password = generate_password_hash(data['user_password'], method='sha256')
-    
+
     user.save()
 
     user_data = serialize_object_id(user.to_mongo().to_dict())
